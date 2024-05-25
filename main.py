@@ -1,20 +1,25 @@
+import tk
+import tkinter.scrolledtext
+from tkinter import *
+from tkinter import ttk
 import socket
-import sys
 import threading
-
 localPORT = 1488
 
+def send_msg(*args):
+    global msg_input
 
-def sender_func(message):
-    if len(message) == 0:
+
+    if len(msg_input.get()) == 0:
         return
     send_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM, proto=socket.IPPROTO_UDP)
     send_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
     send_socket.bind(("0.0.0.0", 0))
-    send_socket.sendto(message.encode(), ("255.255.255.255", localPORT))
+    send_socket.sendto(msg_input.get().encode(), ("255.255.255.255", localPORT))
     send_socket.close()
-    return
 
+    msg_input.set("")
+    return
 
 def receiver_func():
     udp_server_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM, proto=socket.IPPROTO_UDP)
@@ -23,18 +28,39 @@ def receiver_func():
 
     while True:
         data = udp_server_socket.recvfrom(4096)
-        print(f"{data[1]}:  >> {data[0].decode()}")
+
+        msg_output.configure(state='normal')
+        msg_output.insert(tk.INSERT, f"{data[1]}:  >> {data[0].decode()}")
+        msg_output.insert(tk.INSERT, '\n')
+        msg_output.configure(state='disabled')
+
 
 
 receiverThread = threading.Thread(target=receiver_func, daemon=True)
 receiverThread.start()
 
-sender_func('[---- JOINED ----]')
+root = Tk()
+root.title("BRD CHAT")
 
-while True:
-    try:
-        sender_func(input())
-    except KeyboardInterrupt:
-        sender_func('[---- LEFT ----]')
-        print("chat closed")
-        sys.exit(0)
+msg_output = tkinter.scrolledtext.ScrolledText(root, state='disabled')
+msg_output.grid(column=0, columnspan=2)
+
+
+msg_input = StringVar()
+msg_input.set('[---- joined chat ----]')
+send_msg()
+
+msg_entry = ttk.Entry(root, textvariable=msg_input)
+msg_entry.grid(column=0, row=1, sticky=(N,S,E,W))
+send_btn = ttk.Button(text="send", command=send_msg)
+send_btn.grid(column=1, row=1)
+
+root.bind('<Return>', send_msg)
+msg_entry.focus()
+
+root.mainloop()
+
+msg_input.set('[---- left chat ----]')
+send_msg()
+
+exit(0)
