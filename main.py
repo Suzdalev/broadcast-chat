@@ -1,6 +1,7 @@
 import socket
 import sys
 import threading
+import time
 
 localPORT = 1488
 
@@ -23,7 +24,7 @@ def receiver_func():
 
     while True:
         data = udp_server_socket.recvfrom(4096)
-        print(f"{data[1]}:  >> {data[0].decode()}")
+        print(f"\n[{time.localtime()[3]}:{time.localtime()[4]} @ {data[1][0]}]:\n  >> {data[0].decode()}\n")
 
 
 receiverThread = threading.Thread(target=receiver_func, daemon=True)
