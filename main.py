@@ -4,36 +4,37 @@ import threading
 
 localPORT = 1488
 
-def senderFunc(message):
+
+def sender_func(message):
     if len(message) == 0:
         return
-    sendsock = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM, proto=socket.IPPROTO_UDP)
-    sendsock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-    sendsock.bind(("0.0.0.0", 0))
-    sendsock.sendto(message.encode(), ("255.255.255.255", localPORT))
-    sendsock.close()
+    send_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM, proto=socket.IPPROTO_UDP)
+    send_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    send_socket.bind(("0.0.0.0", 0))
+    send_socket.sendto(message.encode(), ("255.255.255.255", localPORT))
+    send_socket.close()
     return
 
 
-def receiverFunc():
-    UDPServerSocket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM, proto=socket.IPPROTO_UDP)
-    UDPServerSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    UDPServerSocket.bind(("0.0.0.0", localPORT))
+def receiver_func():
+    udp_server_socket = socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM, proto=socket.IPPROTO_UDP)
+    udp_server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    udp_server_socket.bind(("0.0.0.0", localPORT))
 
-    while (True):
-        data = UDPServerSocket.recvfrom(4096)
+    while True:
+        data = udp_server_socket.recvfrom(4096)
         print(f"{data[1]}:  >> {data[0].decode()}")
 
 
-receiverThread = threading.Thread(target=receiverFunc, daemon=True)
+receiverThread = threading.Thread(target=receiver_func, daemon=True)
 receiverThread.start()
 
-senderFunc('[---- JOINED ----]')
+sender_func('[---- JOINED ----]')
 
-while (True):
+while True:
     try:
-        senderFunc(input())
+        sender_func(input())
     except KeyboardInterrupt:
-        senderFunc('[---- LEFT ----]')
+        sender_func('[---- LEFT ----]')
         print("chat closed")
         sys.exit(0)
